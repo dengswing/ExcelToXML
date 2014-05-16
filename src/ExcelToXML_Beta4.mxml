@@ -108,7 +108,7 @@
 			private function createXML(sheet:Sheet):Object
 			{
 				var filterList:Array=["isRow","lang"];	//过滤列表
-				var isRow:Boolean = (findNodeIsRow("lang", sheet) || findNodeIsRow("isRow", sheet));
+				var isRow:Boolean = findNodeIsRow("isRow", sheet);
 				var isHaveLang:Boolean = (findNodeIsRow("lang", sheet) || findNodeIsRow("lang",sheet,false));	//是否有语言
 				
 				var isCol:Boolean = findNodeIsRow("key", sheet);
