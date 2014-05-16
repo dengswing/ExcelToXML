@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx" width="482" height="468"  applicationComplete="init()" >
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->	
+	</fx:Declarations>	
+	
+	<fx:Script>
+		<![CDATA[
+			import com.as3xls.xls.ExcelFile;
+			import com.as3xls.xls.Sheet;
+			
+			import mx.controls.Alert;		
+			
+			private var aLangList:Array=[]; //语言列表
+			
+			private function init():void
+			{
+				var m:String=getValue("excelM");
+				excel_txt.text =(m ? m :  "选择Excel文件") ;
+				
+				var p:String=getValue("excelP");
+				xml_txt.text =(p ? p : "默认和Excel同一路径") ;
+				
+				excel_txt.addEventListener(Event.CHANGE,textHandler);
+				xml_txt.addEventListener(Event.CHANGE,textHandler);
+			}
+			
+			private function textHandler(e:Event):void
+			{
+				storeDataLSO(excel_txt.text,xml_txt.text);
+			}
+			
+			private function onCreate(path:String):void 
+			{
+				// Load the embedded spreadsheet and get the first sheet
+				var urlloader:URLLoader = new URLLoader();
+				urlloader.dataFormat = URLLoaderDataFormat.BINARY;
+				urlloader.addEventListener(Event.COMPLETE,urlloaderCompHandler);
+				urlloader.addEventListener(IOErrorEvent.IO_ERROR,urlloaderErrHandler);
+				urlloader.load(new URLRequest(path));
+				
+				addTipsValue("start loader "+path);
+				function urlloaderCompHandler(e:Event):void 
+				{
+					addTipsValue("finish loader");
+					addTipsValue("parse data");
+					var excelFile:ExcelFile = new ExcelFile();
+					excelFile.loadFromByteArray(e.target.data);
+					
+					createOneXML(excelFile);				
+				} 
+				
+				function urlloaderErrHandler(e:IOErrorEvent):void
+				{
+					Alert.show(e.text,"文件错误");
+				}
+			}
+			
+			/**
+			 * 创建XML
+			 */	
+			private function createOneXML(excelFile:ExcelFile):void
+			{
+				aLangList=[];
+				var count:int=excelFile.sheets.length;
+				var tData:Array=[];
+				for(var i:int=0;i<count;i+=1)
+				{
+					var sheet:Sheet = excelFile.sheets[i];
+					if(!sheet) continue;		
+					tData.push({"name":sheet.name,"value":createXML(sheet)});
+				}
+				
+				addTipsValue("parse data finish");
+				
+				count=aLangList.length;		
+				if(count<=0)
+				{
+					Alert.show("没有任何语言版本，缺少lang.","错误");
+					return;
+				}
+				
+				for(i=0;i<count;i+=1)
+				{			
+					var sXML:String=getXMLData(aLangList[i]);				
+					createFile(sXML,(aLangList[i]=="ALL" ? null : aLangList[i]));				
+				}
+				
+				addTipsValue("create xml data complete");			
+				
+				function getXMLData(lang:String):String
+				{
+					var sxml:String="";
+					var count:int=tData.length;			
+					for(var i:int=0;i<count;i+=1)
+					{
+						if(!tData[i].value[lang]) continue;
+						sxml+="   <"+tData[i].name+">";
+						sxml+= "\n"+tData[i].value[lang]+"\n";
+						sxml+="   </"+tData[i].name+">\n";			
+					}
+					return sxml;
+				}			
+			}	
+				
+			private function createXML(sheet:Sheet):Object
+			{
+				var filterList:Array=["isRow","lang"];	//过滤列表
+				var isRow:Boolean = (findNodeIsRow("lang", sheet) || findNodeIsRow("isRow", sheet));
+				var isHaveLang:Boolean = (findNodeIsRow("lang", sheet) || findNodeIsRow("lang",sheet,false));	//是否有语言
+				
+				var isCol:Boolean = findNodeIsRow("key", sheet);
+				var isKey:Boolean = (isCol || findNodeIsRow("key",sheet,false));	//是否有key
+				
+				var dObject:Object;
+				
+				if(isKey)
+				{
+					dObject = parseExcelToXML(sheet,isCol);
+				}else 
+				{
+					var row:int=(!isRow ? sheet.rows : sheet.cols);			
+					var col:int=(isRow ? sheet.rows : sheet.cols);
+					var tArr:Array;
+					dObject = new Object();
+					if(!isHaveLang) col=1;
+					for(var i:int=0;i<col;i+=1)
+					{	
+						if(isHaveLang && !isHaveLangValue(sheet,isRow,row,i+1)) continue; //没有语言
+						tArr = createNodeXML(sheet, isRow, row, isHaveLang, filterList, i + 1);
+						dObject[tArr[0]] = tArr[1];				
+						if (tArr[0] && aLangList.indexOf(tArr[0]) == -1) aLangList.push(tArr[0]); //汇总语言
+					}
+				}
+				//trace(sxml);
+				return dObject;
+			}
+			
+			private function parseExcelToXML(sheet:Sheet,isCol:Boolean):Object
+			{
+				var dObject:Object=new Object();
+				
+				var row:int = (isCol ? sheet.rows : sheet.cols);		
+				var col:int = (isCol ? sheet.cols : sheet.rows);
+				
+				var lang:String;
+				for (var i:int = 0; i < col; i += 1)				
+				{	
+					lang = (isCol ? sheet.getCell(0, i).value : sheet.getCell(i, 0).value);	
+					
+					if (lang == "all") lang = "ALL";
+					
+					if (lang.indexOf("_") == -1 && lang != "ALL") continue;
+					
+					if (aLangList.indexOf(lang) == -1) aLangList.push(lang); //汇总语言 
+					dObject[lang] = createXML(i);
+				}
+				
+				function createXML(index:int):String
+				{
+					var id:String, iValue:String;
+					var sxml:String = "";
+					var nodeStr:String;
+					var reg:RegExp = /(^\s+)|(\s+$)|\s/g;	
+					
+					for (var i:int = 1; i < row; i += 1)					
+					{
+						nodeStr = "     <info ";	
+						for (var j:int = 0; j < col; j += 1)
+						{		
+							id = (isCol ? sheet.getCell(0, j).value : sheet.getCell(j, 0).value);
+							if (id) id = id.replace(reg, "");
+							
+							iValue = (isCol ? sheet.getCell(i, j).value : sheet.getCell(j, i).value);
+							if (id == "key")
+							{
+								iValue = (isCol ? sheet.getCell(i, index).value : sheet.getCell(index, i).value);
+								id = (isCol ? sheet.getCell(i, j).value : sheet.getCell(j, i).value);
+								if (!id)
+								{
+									nodeStr = null;
+									break;
+								} 
+							}
+							
+							if(!id || regNum(id) || id.indexOf("_") != -1) continue;
+							
+							if (nodeStr != "     <info ") nodeStr += "           ";
+							nodeStr += id + "=\"" + iValue + "\"\n";
+						}
+						
+						if (nodeStr)
+						{
+							if(nodeStr.indexOf("\n")) nodeStr=nodeStr.substring(0,nodeStr.lastIndexOf("\n"));						
+							nodeStr+="/>\n";	
+							sxml += nodeStr;
+						}
+					}
+					
+					return sxml;
+				}
+				
+				return dObject;
+			}
+			
+		
+			/**
+			 * 检查语言
+			 */
+			private function isHaveLangValue(sheet:Sheet,isRow:Boolean,row:int,index:int):Boolean
+			{
+				var lang:String,id:String;
+				for(var i:int=0;i<row;i+=1)
+				{	
+					id=(isRow ? sheet.getCell(0, i).value : sheet.getCell(i, 0).value);	
+					if(id=="lang")
+					{
+						if(isRow)
+							lang=sheet.getCell(index, i).value;			
+						else 
+							lang= sheet.getCell(i, index).value;		
+						break;
+					} 
+				}			
+				return (lang !=null && lang!="");
+			}
+		
+			/**
+			 * 创建XML
+			 */
+			private function createNodeXML(sheet:Sheet,isRow:Boolean,row:int,isHaveLang:Boolean,filterList:Array,index:int):Array
+			{
+					var id:String,oNode:Object,lang:String;
+					var sxml:String="";
+					var nodeStr:String;
+					var reg:RegExp = /(^\s+)|(\s+$)|\s/g;	
+					oNode=new Object();
+					nodeStr="     <info ";
+					for(var j:int=0;j<row;j+=1)
+					{			
+						id=(isRow ? sheet.getCell(0, j).value : sheet.getCell(j, 0).value);	
+						if(id) id=id.replace(reg,"");
+						if(id=="lang") lang=(isRow ? sheet.getCell(index, j).value : sheet.getCell(j, index).value); //获取语言
+						if(!id || oNode[id] || regNum(id) || filterList.indexOf(id)!=-1) continue;
+						oNode[id]=1;
+						if(nodeStr!="     <info ") nodeStr+="           ";
+						if(isRow)
+							nodeStr +=id+"=\"" + sheet.getCell(index, j).value + "\"";			
+						else 
+							nodeStr +=id+"=\"" + sheet.getCell(j, index).value + "\"";	
+						
+						nodeStr+="\n";
+					}
+					if(nodeStr.indexOf("\n")) nodeStr=nodeStr.substring(0,nodeStr.lastIndexOf("\n"));
+					nodeStr+="/>";	
+					sxml+=nodeStr;
+					if(!isHaveLang) lang="ALL";
+					return [lang,sxml];
+			}
+			
+			/**
+			 * 查找是否按行生成数据
+			 */	
+			private function findNodeIsRow(sname:String,sheet:Sheet,isRow:Boolean=true):Boolean
+			{
+				var isFind:Boolean;			
+				var id:String;      
+				var count:int=(isRow ? sheet.cols: sheet.rows);
+				for(var j:int=0;j<count;j+=1)
+				{			
+					if(isRow)
+						id= sheet.getCell(0, j).value;		
+					else 
+						id=sheet.getCell(j,0).value;
+					
+					if(id==sname)
+					{
+						isFind=true;
+						break;
+					}
+				}	
+				return isFind;
+			}
+			
+			private function regNum(sValue:String):Boolean
+			{
+				var isFind:Boolean;
+				var iValue:String=sValue.substring(0,1);
+				for(var i:int=0;i<9;i+=1)
+				{
+					if(i.toString()==iValue)
+					{
+						isFind=true;
+						break;
+					}
+				}
+				
+				return isFind;
+			}
+			
+			private function createFile(sData:*,sFile:String=null):void
+			{
+				var  sName:String=String(excel_txt.text);
+				var sPath:String=xml_txt.text;
+				if(sPath=="" || sPath=="默认和Excel同一路径")  sPath = sName.substring(0,sName.lastIndexOf(File.separator));
+				
+				sName=sName.substring(sName.lastIndexOf(File.separator)+1,sName.lastIndexOf("."));			   
+				
+				sPath+=File.separator+(sFile ? sFile+File.separator :"")+sName+".xml";
+				
+				addTipsValue("start create xml file "+sPath);
+				saveData(sPath,sData);
+			}
+			
+			/**
+			 * 保存文件
+			 */
+			private function saveData(path:String = null, _dataXML:String = null):void {		
+				try
+				{
+					var dataFile:File = new File(path);		
+					var stream:FileStream = new FileStream();		
+					stream.open(dataFile, FileMode.WRITE);
+					stream.writeUTFBytes("<?xml version='1.0' encoding='UTF-8'?>\n<root>\n"+_dataXML+"</root>");
+					stream.close();
+					
+					Alert.show(path,"生成XML文件成功");
+					addTipsValue("create xml file complete");
+				}catch(e:Error)
+				{
+					Alert.show(path,"路径错误");
+				}
+			}	
+			
+			private function addTipsValue(sValue:String):void
+			{
+				if(tips_txt.text) tips_txt.text+="\n";
+				tips_txt.text+=sValue;			
+			}	
+			
+			protected function onBrowseProject(event:MouseEvent):void
+			{				
+				var excelFilter:FileFilter = new FileFilter("Excel(*.xlsx,*.xls)", "*.xlsx;*.xls");
+				var file:File = new File();
+				file.browseForOpen("选择Excel文件",[excelFilter]);
+				file.addEventListener(Event.SELECT,onProjectSelected);
+			}
+			
+			protected function onProjectSelected(event:Event):void
+			{
+				var file:File = event.target as File;
+				excel_txt.text =file.nativePath;		
+				storeDataLSO(excel_txt.text,xml_txt.text);
+			}
+			
+			protected function onBrowseRelease(event:MouseEvent):void
+			{
+				var file:File = new File();
+				file.browseForDirectory("选择生成xml路径");
+				file.addEventListener(Event.SELECT,onReleaseSelected);
+			}
+			
+			protected function onReleaseSelected(event:Event):void
+			{
+				xml_txt.text = (event.target as File).nativePath;
+				storeDataLSO(excel_txt.text,xml_txt.text);
+			}	
+			
+			protected function start_btn_clickHandler(event:MouseEvent):void
+			{
+				if(excel_txt.text=="选择Excel文件")
+				{
+					Alert.show("选择Excel文件");
+					return;
+				}
+				onCreate(excel_txt.text);
+			}
+			protected function clear_mc_clickHandler(event:MouseEvent):void
+			{
+				if(tips_txt.text=="")
+				{
+					Alert.show("已经清理过了");
+					return;
+				}
+				tips_txt.text="";
+			}
+			
+			private function storeDataLSO(m:String=null, p:String=null):void
+			{
+				var sharedObject:SharedObject = SharedObject.getLocal("excel", "/");
+				sharedObject.data["excelM"] = m;
+				sharedObject.data["excelP"] = p;
+				
+				try
+				{
+					var flushResult:String = sharedObject.flush();
+					if (flushResult == SharedObjectFlushStatus.FLUSHED)
+					{
+						return;
+					}
+				}
+				catch (e:Error)
+				{
+					Security.showSettings(SecurityPanel.LOCAL_STORAGE);
+				}
+			}
+			
+			private function getValue(m:String):String
+			{
+				var sharedObject:SharedObject = SharedObject.getLocal("excel", "/");				
+				return (sharedObject.data.hasOwnProperty(m) ? sharedObject.data[m] : null);
+			}
+			
+		]]>
+	</fx:Script>
+	<mx:Form x="-2" y="1" width="492" height="475">	
+		<s:BorderContainer width="456" height="30" borderVisible="true" dropShadowVisible="false" borderColor="#4C3939" borderAlpha="0.01">
+			<s:Label x="-1" y="-1" text="Excel导出XML工具" width="455" height="29" verticalAlign="middle" textAlign="center"/>
+			<s:Label x="355" y="-1" text="beta 3.3.3&#xd;05-15 2014" width="99" height="35" verticalAlign="middle" textAlign="right" paddingBottom="0" color="#8A7070"/>
+		</s:BorderContainer>	
+		<s:BorderContainer width="456" height="399" dropShadowVisible="true" borderAlpha="0.34" borderWeight="0">		
+			<s:Button x="319" y="13" label="选择Excel路径" width="117" id="choose_btn" click="onBrowseProject(event)"/>
+			<s:TextInput x="8" y="12" width="299" id="excel_txt" borderVisible="true"/>
+			<s:TextInput x="8" y="44" width="299" id="xml_txt" borderVisible="true"/>
+			<s:Button x="319" y="45" label="生成xml路径" width="119" id="create_btn"  click="onBrowseRelease(event)"/>
+			<s:Button x="276" y="83" label="开始生成" id="start_btn" click="start_btn_clickHandler(event)"/>
+			<s:TextArea y="112" width="431" height="275" id="tips_txt" paddingBottom="3" paddingTop="3" x="10"/>
+			<s:Button x="357" y="83" label="清理文本" id="clear_mc" click="clear_mc_clickHandler(event)"/>
+		</s:BorderContainer>
+		
+	</mx:Form>
+</s:WindowedApplication>
