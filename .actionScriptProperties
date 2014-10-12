@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <actionScriptProperties analytics="false" mainApplicationPath="ExcelToXML_Beta4.mxml" projectUUID="10c3a537-95d1-4e4e-b31b-ad66a19cc586" version="11">
   <compiler additionalCompilerArguments="-locale en_US" autoRSLOrdering="true" copyDependentFiles="true" fteInMXComponents="false" generateAccessible="true" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="false" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderPath="bin-debug" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="true" useDebugRSLSwfs="true" useFlashSDK="false" verifyDigests="true" warn="true">
-    <compilerSourcePath/>
+    <compilerSourcePath>
+      <compilerSourcePathEntry kind="1" linkType="1" path="${DOCUMENTS}/as3-xlsx-reader/src"/>
+      <compilerSourcePathEntry kind="1" linkType="1" path="${DOCUMENTS}/fzip/src"/>
+    </compilerSourcePath>
     <libraryPath defaultLinkType="0">
       <libraryPathEntry kind="4" path="">
         <excludedEntries>
@@ -9,23 +12,10 @@
           <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/core.swc" useDefaultLinkType="false"/>
         </excludedEntries>
       </libraryPathEntry>
-      <libraryPathEntry kind="1" linkType="1" path="libs"/>
     </libraryPath>
     <sourceAttachmentPath/>
   </compiler>
   <applications>
-    <application path="excel5.mxml">
-      <airExcludes/>
-    </application>
-    <application path="ExcelToXML_New.mxml">
-      <airExcludes/>
-    </application>
-    <application path="ExcelToXML.mxml">
-      <airExcludes/>
-    </application>
-    <application path="ExcelToXML_Beta3.mxml">
-      <airExcludes/>
-    </application>
     <application path="ExcelToXML_Beta4.mxml">
       <airExcludes/>
     </application>

@@ -8,12 +8,14 @@
 	
 	<fx:Script>
 		<![CDATA[
-			import com.as3xls.xls.ExcelFile;
-			import com.as3xls.xls.Sheet;
+			import com.childoftv.xlsxreader.Worksheet;
+			import com.childoftv.xlsxreader.XLSXLoader;
 			
 			import mx.controls.Alert;		
 			
 			private var aLangList:Array=[]; //语言列表
+			
+			private var _xlsxLoader:XLSXLoader;
 			
 			private function init():void
 			{
@@ -35,21 +37,18 @@
 			private function onCreate(path:String):void 
 			{
 				// Load the embedded spreadsheet and get the first sheet
-				var urlloader:URLLoader = new URLLoader();
-				urlloader.dataFormat = URLLoaderDataFormat.BINARY;
-				urlloader.addEventListener(Event.COMPLETE,urlloaderCompHandler);
-				urlloader.addEventListener(IOErrorEvent.IO_ERROR,urlloaderErrHandler);
-				urlloader.load(new URLRequest(path));
-				
+				_xlsxLoader ||= new XLSXLoader();
+				//Listen for when the file is loaded
+				_xlsxLoader.addEventListener(Event.COMPLETE,urlloaderCompHandler);
+				_xlsxLoader.addEventListener(IOErrorEvent.IO_ERROR, urlloaderErrHandler);
+				//Load the file
+				_xlsxLoader.load(path);
 				addTipsValue("start loader "+path);
 				function urlloaderCompHandler(e:Event):void 
 				{
 					addTipsValue("finish loader");
 					addTipsValue("parse data");
-					var excelFile:ExcelFile = new ExcelFile();
-					excelFile.loadFromByteArray(e.target.data);
-					
-					createOneXML(excelFile);				
+					createOneXML();				
 				} 
 				
 				function urlloaderErrHandler(e:IOErrorEvent):void
@@ -61,16 +60,18 @@
 			/**
 			 * 创建XML
 			 */	
-			private function createOneXML(excelFile:ExcelFile):void
+			private function createOneXML():void
 			{
 				aLangList=[];
-				var count:int=excelFile.sheets.length;
+				var sheet_names:Vector.<String> = _xlsxLoader.getSheetNames();
+				var count:int= sheet_names.length;
 				var tData:Array=[];
-				for(var i:int=0;i<count;i+=1)
+				for each(var name:String in sheet_names)
 				{
-					var sheet:Sheet = excelFile.sheets[i];
-					if(!sheet) continue;		
-					tData.push({"name":sheet.name,"value":createXML(sheet)});
+					var sheet:Object = _xlsxLoader.worksheet(name);
+					if(!sheet) 
+						continue;		
+					tData.push({"name":name,"value":createXML(sheet)});
 				}
 				
 				addTipsValue("parse data finish");
@@ -82,7 +83,7 @@
 					return;
 				}
 				
-				for(i=0;i<count;i+=1)
+				for(var i:int=0;i<count;i+=1)
 				{			
 					var sXML:String=getXMLData(aLangList[i]);				
 					createFile(sXML,(aLangList[i]=="ALL" ? null : aLangList[i]));				
@@ -105,7 +106,7 @@
 				}			
 			}	
 				
-			private function createXML(sheet:Sheet):Object
+			private function createXML(sheet:Worksheet):Object
 			{
 				var filterList:Array=["isRow","lang"];	//过滤列表
 				var isRow:Boolean = findNodeIsRow("isRow", sheet);
@@ -128,7 +129,8 @@
 					if(!isHaveLang) col=1;
 					for(var i:int=0;i<col;i+=1)
 					{	
-						if(isHaveLang && !isHaveLangValue(sheet,isRow,row,i+1)) continue; //没有语言
+						if(isHaveLang && !isHaveLangValue(sheet,isRow,row,i+1)) 
+							continue; //没有语言
 						tArr = createNodeXML(sheet, isRow, row, isHaveLang, filterList, i + 1);
 						dObject[tArr[0]] = tArr[1];				
 						if (tArr[0] && aLangList.indexOf(tArr[0]) == -1) aLangList.push(tArr[0]); //汇总语言
@@ -342,7 +344,7 @@
 			
 			protected function onBrowseProject(event:MouseEvent):void
 			{				
-				var excelFilter:FileFilter = new FileFilter("Excel(*.xlsx,*.xls)", "*.xlsx;*.xls");
+				var excelFilter:FileFilter = new FileFilter("Excel(*.xlsx)", "*.xlsx");
 				var file:File = new File();
 				file.browseForOpen("选择Excel文件",[excelFilter]);
 				file.addEventListener(Event.SELECT,onProjectSelected);
