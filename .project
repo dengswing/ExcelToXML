@@ -25,12 +25,12 @@
 		<link>
 			<name>[source path] as3-xlsx-reader-src</name>
 			<type>2</type>
-			<locationURI>DOCUMENTS/as3-xlsx-reader/src</locationURI>
+			<location>E:/workspace_git/as3-xlsx-reader/src</location>
 		</link>
 		<link>
 			<name>[source path] fzip-src</name>
 			<type>2</type>
-			<locationURI>DOCUMENTS/fzip/src</locationURI>
+			<location>E:/workspace_git/fzip/src</location>
 		</link>
 	</linkedResources>
 </projectDescription>

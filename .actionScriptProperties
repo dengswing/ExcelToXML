@@ -2,8 +2,8 @@
 <actionScriptProperties analytics="false" mainApplicationPath="ExcelToXML_Beta4.mxml" projectUUID="10c3a537-95d1-4e4e-b31b-ad66a19cc586" version="11">
   <compiler additionalCompilerArguments="-locale en_US" autoRSLOrdering="true" copyDependentFiles="true" fteInMXComponents="false" generateAccessible="true" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="false" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderPath="bin-debug" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="true" useDebugRSLSwfs="true" useFlashSDK="false" verifyDigests="true" warn="true">
     <compilerSourcePath>
-      <compilerSourcePathEntry kind="1" linkType="1" path="${DOCUMENTS}/as3-xlsx-reader/src"/>
-      <compilerSourcePathEntry kind="1" linkType="1" path="${DOCUMENTS}/fzip/src"/>
+      <compilerSourcePathEntry kind="1" linkType="1" path="E:/workspace_git/as3-xlsx-reader/src"/>
+      <compilerSourcePathEntry kind="1" linkType="1" path="E:/workspace_git/fzip/src"/>
     </compilerSourcePath>
     <libraryPath defaultLinkType="0">
       <libraryPathEntry kind="4" path="">
@@ -12,6 +12,7 @@
           <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/core.swc" useDefaultLinkType="false"/>
         </excludedEntries>
       </libraryPathEntry>
+      <libraryPathEntry kind="1" linkType="1" path="libs"/>
     </libraryPath>
     <sourceAttachmentPath/>
   </compiler>
