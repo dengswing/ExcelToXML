@@ -172,7 +172,7 @@
 						nodeStr = "     <info ";	
 						for (var j:int = 1; j <= col; j += 1)
 						{		
-							id = (isCol ? sheet.getCellExtend(1, j) : sheet.getCellExtend(j, 1));
+							id = (isCol ? sheet.getCellExtend(1, j, false) : sheet.getCellExtend(j, 1, false));
 							if (id) id = id.replace(reg, "");
 							
 							iValue = (isCol ? sheet.getCellExtend(i, j) : sheet.getCellExtend(j, i));
@@ -220,9 +220,9 @@
 					if(id=="lang")
 					{
 						if(isRow)
-							lang=sheet.getCellExtend(index, i);			
+							lang=sheet.getCellExtend(index, i,false);			
 						else 
-							lang= sheet.getCellExtend(i, index);		
+							lang= sheet.getCellExtend(i, index,false);		
 						break;
 					} 
 				}			
@@ -242,9 +242,9 @@
 					nodeStr="     <info ";
 					for(var j:int=1;j<=row;j+=1)
 					{			
-						id=(isRow ? sheet.getCellExtend(1, j) : sheet.getCellExtend(j, 1));	
+						id=(isRow ? sheet.getCellExtend(1, j, false) : sheet.getCellExtend(j, 1, false));	
 						if(id) id=id.replace(reg,"");
-						if(id=="lang") lang=(isRow ? sheet.getCellExtend(index, j) : sheet.getCellExtend(j, index)); //获取语言
+						if(id=="lang") lang=(isRow ? sheet.getCellExtend(index, j, false) : sheet.getCellExtend(j, index, false)); //获取语言
 						if(!id || oNode[id] || regNum(id) || filterList.indexOf(id)!=-1) continue;
 						oNode[id]=1;
 						if(nodeStr!="     <info ") nodeStr+="           ";
