@@ -16,19 +16,7 @@
     <sourceAttachmentPath/>
   </compiler>
   <applications>
-    <application path="ExcelToXML.mxml">
-      <airExcludes/>
-    </application>
-    <application path="ExcelToXML_Beta3.mxml">
-      <airExcludes/>
-    </application>
-    <application path="ExcelToXML_Beta4.mxml">
-      <airExcludes/>
-    </application>
-    <application path="ExcelToXML_New.mxml">
-      <airExcludes/>
-    </application>
-    <application path="excel5.mxml">
+    <application path="ExcelToXMLExtend.mxml">
       <airExcludes/>
     </application>
   </applications>
