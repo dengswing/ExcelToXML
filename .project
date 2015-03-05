@@ -21,16 +21,4 @@
 		<nature>com.adobe.flexbuilder.project.flexnature</nature>
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>[source path] as3-xlsx-reader-src</name>
-			<type>2</type>
-			<location>E:/workspace_git/as3-xlsx-reader/src</location>
-		</link>
-		<link>
-			<name>[source path] fzip-src</name>
-			<type>2</type>
-			<location>E:/workspace_git/fzip/src</location>
-		</link>
-	</linkedResources>
 </projectDescription>

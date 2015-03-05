@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<actionScriptProperties analytics="false" mainApplicationPath="ExcelToXML_Beta4.mxml" projectUUID="10c3a537-95d1-4e4e-b31b-ad66a19cc586" version="11">
+<actionScriptProperties analytics="false" mainApplicationPath="ExcelToXMLExtend.mxml" projectUUID="10c3a537-95d1-4e4e-b31b-ad66a19cc586" version="11">
   <compiler additionalCompilerArguments="-locale en_US" autoRSLOrdering="true" copyDependentFiles="true" fteInMXComponents="false" generateAccessible="true" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="false" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderPath="bin-debug" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="true" useDebugRSLSwfs="true" useFlashSDK="false" verifyDigests="true" warn="true">
     <compilerSourcePath>
-      <compilerSourcePathEntry kind="1" linkType="1" path="E:/workspace_git/as3-xlsx-reader/src"/>
-      <compilerSourcePathEntry kind="1" linkType="1" path="E:/workspace_git/fzip/src"/>
+      <compilerSourcePathEntry kind="1" linkType="1" path="as3-xlsx-reader/src"/>
+      <compilerSourcePathEntry kind="1" linkType="1" path="fzip/src"/>
     </compilerSourcePath>
     <libraryPath defaultLinkType="0">
       <libraryPathEntry kind="4" path="">
@@ -12,12 +12,11 @@
           <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/core.swc" useDefaultLinkType="false"/>
         </excludedEntries>
       </libraryPathEntry>
-      <libraryPathEntry kind="1" linkType="1" path="libs"/>
     </libraryPath>
     <sourceAttachmentPath/>
   </compiler>
   <applications>
-    <application path="ExcelToXML_Beta4.mxml">
+    <application path="ExcelToXMLExtend.mxml">
       <airExcludes/>
     </application>
   </applications>
@@ -27,8 +26,24 @@
   <flashCatalyst validateFlashCatalystCompatibility="false"/>
   <buildTargets>
     <buildTarget buildTargetName="default" platformId="default">
-      <airSettings airCertificatePath="F:/work/tools/excel5/key.p12" airTimestamp="true" anePathSet="true" version="1">
-        <airExcludes/>
+      <airSettings airCertificatePath="release-key.p12" airTimestamp="true" anePathSet="true" version="1">
+        <airExcludes>
+          <pathEntry path="ExcelToXML_Beta4-app.xml"/>
+          <pathEntry path="ExcelToXML.swf"/>
+          <pathEntry path="Example Spreadsheet.xlsx"/>
+          <pathEntry path="ExcelToXML_New-app.xml"/>
+          <pathEntry path="ExcelToXML_Beta3.swf"/>
+          <pathEntry path="ExcelToXML_Beta4.swf"/>
+          <pathEntry path="excel5.swf"/>
+          <pathEntry path=".DS_Store"/>
+          <pathEntry path="ExcelToXML-app.xml"/>
+          <pathEntry path="com"/>
+          <pathEntry path="excel5-app.xml"/>
+          <pathEntry path="ExcelToXML_New.swf"/>
+          <pathEntry path="ExcelToXML_Beta3-app.xml"/>
+          <pathEntry path="InterestCalc.xls"/>
+          <pathEntry path="samples"/>
+        </airExcludes>
         <anePaths/>
         <newLaunchParams/>
         <modifiedLaunchParams/>

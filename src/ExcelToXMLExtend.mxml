@@ -36,14 +36,16 @@
 			
 			private function onCreate(path:String):void 
 			{
+				var file:File = new File(path);
+				var url:String = file.url;
 				// Load the embedded spreadsheet and get the first sheet
 				_xlsxLoader ||= new XLSXLoader();
 				//Listen for when the file is loaded
 				_xlsxLoader.addEventListener(Event.COMPLETE,urlloaderCompHandler);
 				_xlsxLoader.addEventListener(IOErrorEvent.IO_ERROR, urlloaderErrHandler);
 				//Load the file
-				_xlsxLoader.load(path);
-				addTipsValue("start loader "+path);
+				_xlsxLoader.load(url);
+				addTipsValue("start loader "+url);
 				function urlloaderCompHandler(e:Event):void 
 				{
 					addTipsValue("finish loader");
