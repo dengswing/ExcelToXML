@@ -8,12 +8,14 @@
 	
 	<fx:Script>
 		<![CDATA[
-			import com.as3xls.xls.ExcelFile;
-			import com.as3xls.xls.Sheet;
+			import com.childoftv.xlsxreader.Worksheet;
+			import com.childoftv.xlsxreader.XLSXLoader;
 			
 			import mx.controls.Alert;		
 			
 			private var aLangList:Array=[]; //语言列表
+			
+			private var _xlsxLoader:XLSXLoader;
 			
 			private function init():void
 			{
@@ -34,22 +36,21 @@
 			
 			private function onCreate(path:String):void 
 			{
+				var file:File = new File(path);
+				var url:String = file.url;
 				// Load the embedded spreadsheet and get the first sheet
-				var urlloader:URLLoader = new URLLoader();
-				urlloader.dataFormat = URLLoaderDataFormat.BINARY;
-				urlloader.addEventListener(Event.COMPLETE,urlloaderCompHandler);
-				urlloader.addEventListener(IOErrorEvent.IO_ERROR,urlloaderErrHandler);
-				urlloader.load(new URLRequest(path));
-				
-				addTipsValue("start loader "+path);
+				_xlsxLoader ||= new XLSXLoader();
+				//Listen for when the file is loaded
+				_xlsxLoader.addEventListener(Event.COMPLETE,urlloaderCompHandler);
+				_xlsxLoader.addEventListener(IOErrorEvent.IO_ERROR, urlloaderErrHandler);
+				//Load the file
+				_xlsxLoader.load(url);
+				addTipsValue("start loader "+url);
 				function urlloaderCompHandler(e:Event):void 
 				{
 					addTipsValue("finish loader");
 					addTipsValue("parse data");
-					var excelFile:ExcelFile = new ExcelFile();
-					excelFile.loadFromByteArray(e.target.data);
-					
-					createOneXML(excelFile);				
+					createOneXML();				
 				} 
 				
 				function urlloaderErrHandler(e:IOErrorEvent):void
@@ -61,16 +62,18 @@
 			/**
 			 * 创建XML
 			 */	
-			private function createOneXML(excelFile:ExcelFile):void
+			private function createOneXML():void
 			{
 				aLangList=[];
-				var count:int=excelFile.sheets.length;
+				var sheet_names:Vector.<String> = _xlsxLoader.getSheetNames();
+				var count:int= sheet_names.length;
 				var tData:Array=[];
-				for(var i:int=0;i<count;i+=1)
+				for each(var name:String in sheet_names)
 				{
-					var sheet:Sheet = excelFile.sheets[i];
-					if(!sheet) continue;		
-					tData.push({"name":sheet.name,"value":createXML(sheet)});
+					var sheet:Worksheet = _xlsxLoader.worksheet(name);
+					if(!sheet) 
+						continue;		
+					tData.push({"name":name,"value":createXML(sheet)});
 				}
 				
 				addTipsValue("parse data finish");
@@ -82,7 +85,7 @@
 					return;
 				}
 				
-				for(i=0;i<count;i+=1)
+				for(var i:int=0;i<count;i+=1)
 				{			
 					var sXML:String=getXMLData(aLangList[i]);				
 					createFile(sXML,(aLangList[i]=="ALL" ? null : aLangList[i]));				
@@ -105,10 +108,10 @@
 				}			
 			}	
 				
-			private function createXML(sheet:Sheet):Object
+			private function createXML(sheet:Worksheet):Object
 			{
 				var filterList:Array=["isRow","lang"];	//过滤列表
-				var isRow:Boolean = findNodeIsRow("isRow", sheet);
+				var isRow:Boolean = !findNodeIsRow("isRow", sheet);
 				var isHaveLang:Boolean = (findNodeIsRow("lang", sheet) || findNodeIsRow("lang",sheet,false));	//是否有语言
 				
 				var isCol:Boolean = findNodeIsRow("key", sheet);
@@ -126,10 +129,11 @@
 					var tArr:Array;
 					dObject = new Object();
 					if(!isHaveLang) col=1;
-					for(var i:int=0;i<col;i+=1)
+					for(var i:int=1;i<=col;i+=1)
 					{	
-						if(isHaveLang && !isHaveLangValue(sheet,isRow,row,i+1)) continue; //没有语言
-						tArr = createNodeXML(sheet, isRow, row, isHaveLang, filterList, i + 1);
+						if(isHaveLang && !isHaveLangValue(sheet,isRow,row,i+1)) 
+							continue; //没有语言
+						tArr = createNodeXML(sheet, isRow, col, isHaveLang, filterList, i + 1);
 						dObject[tArr[0]] = tArr[1];				
 						if (tArr[0] && aLangList.indexOf(tArr[0]) == -1) aLangList.push(tArr[0]); //汇总语言
 					}
@@ -138,7 +142,7 @@
 				return dObject;
 			}
 			
-			private function parseExcelToXML(sheet:Sheet,isCol:Boolean):Object
+			private function parseExcelToXML(sheet:Worksheet,isCol:Boolean):Object
 			{
 				var dObject:Object=new Object();
 				
@@ -146,9 +150,9 @@
 				var col:int = (isCol ? sheet.cols : sheet.rows);
 				
 				var lang:String;
-				for (var i:int = 0; i < col; i += 1)				
+				for (var i:int = 1; i <= col; i += 1)				
 				{	
-					lang = (isCol ? sheet.getCell(0, i).value : sheet.getCell(i, 0).value);	
+					lang = (isCol ? sheet.getCellExtend(1, i) : sheet.getCellExtend(i, 1));	
 					
 					if (lang == "all") lang = "ALL";
 					
@@ -168,16 +172,16 @@
 					for (var i:int = 1; i < row; i += 1)					
 					{
 						nodeStr = "     <info ";	
-						for (var j:int = 0; j < col; j += 1)
+						for (var j:int = 1; j <= col; j += 1)
 						{		
-							id = (isCol ? sheet.getCell(0, j).value : sheet.getCell(j, 0).value);
+							id = (isCol ? sheet.getCellExtend(1, j, false) : sheet.getCellExtend(j, 1, false));
 							if (id) id = id.replace(reg, "");
 							
-							iValue = (isCol ? sheet.getCell(i, j).value : sheet.getCell(j, i).value);
+							iValue = (isCol ? sheet.getCellExtend(i, j) : sheet.getCellExtend(j, i));
 							if (id == "key")
 							{
-								iValue = (isCol ? sheet.getCell(i, index).value : sheet.getCell(index, i).value);
-								id = (isCol ? sheet.getCell(i, j).value : sheet.getCell(j, i).value);
+								iValue = (isCol ? sheet.getCellExtend(i, index) : sheet.getCellExtend(index, i));
+								id = (isCol ? sheet.getCellExtend(i, j) : sheet.getCellExtend(j, i));
 								if (!id)
 								{
 									nodeStr = null;
@@ -209,18 +213,18 @@
 			/**
 			 * 检查语言
 			 */
-			private function isHaveLangValue(sheet:Sheet,isRow:Boolean,row:int,index:int):Boolean
+			private function isHaveLangValue(sheet:Worksheet,isRow:Boolean,row:int,index:int):Boolean
 			{
 				var lang:String,id:String;
-				for(var i:int=0;i<row;i+=1)
+				for(var i:int=1;i<=row;i+=1)
 				{	
-					id=(isRow ? sheet.getCell(0, i).value : sheet.getCell(i, 0).value);	
+					id=(isRow ? sheet.getCellExtend(1, i) : sheet.getCellExtend(i, 1));	
 					if(id=="lang")
 					{
 						if(isRow)
-							lang=sheet.getCell(index, i).value;			
+							lang=sheet.getCellExtend(index, i,false);			
 						else 
-							lang= sheet.getCell(i, index).value;		
+							lang= sheet.getCellExtend(i, index,false);		
 						break;
 					} 
 				}			
@@ -230,7 +234,7 @@
 			/**
 			 * 创建XML
 			 */
-			private function createNodeXML(sheet:Sheet,isRow:Boolean,row:int,isHaveLang:Boolean,filterList:Array,index:int):Array
+			private function createNodeXML(sheet:Worksheet,isRow:Boolean,row:int,isHaveLang:Boolean,filterList:Array,index:int):Array
 			{
 					var id:String,oNode:Object,lang:String;
 					var sxml:String="";
@@ -238,18 +242,18 @@
 					var reg:RegExp = /(^\s+)|(\s+$)|\s/g;	
 					oNode=new Object();
 					nodeStr="     <info ";
-					for(var j:int=0;j<row;j+=1)
+					for(var j:int=1;j<=row;j+=1)
 					{			
-						id=(isRow ? sheet.getCell(0, j).value : sheet.getCell(j, 0).value);	
+						id=(isRow ? sheet.getCellExtend(1, j, false) : sheet.getCellExtend(j, 1, false));	
 						if(id) id=id.replace(reg,"");
-						if(id=="lang") lang=(isRow ? sheet.getCell(index, j).value : sheet.getCell(j, index).value); //获取语言
+						if(id=="lang") lang=(isRow ? sheet.getCellExtend(index, j, false) : sheet.getCellExtend(j, index, false)); //获取语言
 						if(!id || oNode[id] || regNum(id) || filterList.indexOf(id)!=-1) continue;
 						oNode[id]=1;
 						if(nodeStr!="     <info ") nodeStr+="           ";
 						if(isRow)
-							nodeStr +=id+"=\"" + sheet.getCell(index, j).value + "\"";			
+							nodeStr +=id+"=\"" + sheet.getCellExtend(index, j) + "\"";			
 						else 
-							nodeStr +=id+"=\"" + sheet.getCell(j, index).value + "\"";	
+							nodeStr +=id+"=\"" + sheet.getCellExtend(j, index) + "\"";	
 						
 						nodeStr+="\n";
 					}
@@ -263,17 +267,17 @@
 			/**
 			 * 查找是否按行生成数据
 			 */	
-			private function findNodeIsRow(sname:String,sheet:Sheet,isRow:Boolean=true):Boolean
+			private function findNodeIsRow(sname:String,sheet:Worksheet,isRow:Boolean=true):Boolean
 			{
 				var isFind:Boolean;			
 				var id:String;      
 				var count:int=(isRow ? sheet.cols: sheet.rows);
-				for(var j:int=0;j<count;j+=1)
+				for(var j:int=1;j<=count;j+=1)
 				{			
 					if(isRow)
-						id= sheet.getCell(0, j).value;		
+						id= sheet.getCellExtend(1, j);		
 					else 
-						id=sheet.getCell(j,0).value;
+						id=sheet.getCellExtend(j,1);
 					
 					if(id==sname)
 					{
@@ -342,7 +346,7 @@
 			
 			protected function onBrowseProject(event:MouseEvent):void
 			{				
-				var excelFilter:FileFilter = new FileFilter("Excel(*.xlsx,*.xls)", "*.xlsx;*.xls");
+				var excelFilter:FileFilter = new FileFilter("Excel(*.xlsx)", "*.xlsx");
 				var file:File = new File();
 				file.browseForOpen("选择Excel文件",[excelFilter]);
 				file.addEventListener(Event.SELECT,onProjectSelected);
