@@ -126,6 +126,9 @@
 				{
 					var row:int=(!isRow ? sheet.rows : sheet.cols);			
 					var col:int=(isRow ? sheet.rows : sheet.cols);
+					
+					if(row>col) col=row;  //待定
+					
 					var tArr:Array;
 					dObject = new Object();
 					if(!isHaveLang) col=1;
@@ -422,7 +425,7 @@
 	<mx:Form x="-2" y="1" width="492" height="475">	
 		<s:BorderContainer width="456" height="30" borderVisible="true" dropShadowVisible="false" borderColor="#4C3939" borderAlpha="0.01">
 			<s:Label x="-1" y="-1" text="Excel导出XML工具" width="455" height="29" verticalAlign="middle" textAlign="center"/>
-			<s:Label x="355" y="-1" text="beta 3.3.3&#xd;05-15 2014" width="99" height="35" verticalAlign="middle" textAlign="right" paddingBottom="0" color="#8A7070"/>
+			<s:Label x="355" y="-1" text="beta 4.1.1&#xd;03-22 2015" width="99" height="35" verticalAlign="middle" textAlign="right" paddingBottom="0" color="#8A7070"/>
 		</s:BorderContainer>	
 		<s:BorderContainer width="456" height="399" dropShadowVisible="true" borderAlpha="0.34" borderWeight="0">		
 			<s:Button x="319" y="13" label="选择Excel路径" width="117" id="choose_btn" click="onBrowseProject(event)"/>
