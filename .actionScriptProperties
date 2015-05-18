@@ -26,7 +26,7 @@
   <flashCatalyst validateFlashCatalystCompatibility="false"/>
   <buildTargets>
     <buildTarget buildTargetName="default" platformId="default">
-      <airSettings airCertificatePath="F:/work/flowerProjectframe/xlsxToXML/release-key.p12" airTimestamp="true" anePathSet="true" version="1">
+      <airSettings airCertificatePath="F:/self/git/ExcelToXML/2015release-key.p12" airTimestamp="true" anePathSet="true" version="1">
         <airExcludes>
           <pathEntry path="Example Spreadsheet.xlsx"/>
         </airExcludes>

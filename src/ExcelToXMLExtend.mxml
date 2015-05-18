@@ -14,6 +14,7 @@
 			import mx.controls.Alert;		
 			
 			private var aLangList:Array=[]; //语言列表
+			private var _selected:Boolean;	//是否支持html
 			
 			private var _xlsxLoader:XLSXLoader;
 			
@@ -111,7 +112,7 @@
 			private function createXML(sheet:Worksheet):Object
 			{
 				var filterList:Array=["isRow","lang"];	//过滤列表
-				var isRow:Boolean = !findNodeIsRow("isRow", sheet);
+				var isRow:Boolean = (!findNodeIsRow("isRow", sheet) && !findNodeIsRow("isRow",sheet,false))
 				var isHaveLang:Boolean = (findNodeIsRow("lang", sheet) || findNodeIsRow("lang",sheet,false));	//是否有语言
 				
 				var isCol:Boolean = findNodeIsRow("key", sheet);
@@ -155,7 +156,7 @@
 				var lang:String;
 				for (var i:int = 1; i <= col; i += 1)				
 				{	
-					lang = (isCol ? sheet.getCellExtend(1, i) : sheet.getCellExtend(i, 1));	
+					lang = (isCol ? sheet.getCellExtend(1, i,_selected) : sheet.getCellExtend(i, 1,_selected));	
 					
 					if (lang == "all") lang = "ALL";
 					
@@ -180,11 +181,11 @@
 							id = (isCol ? sheet.getCellExtend(1, j, false) : sheet.getCellExtend(j, 1, false));
 							if (id) id = id.replace(reg, "");
 							
-							iValue = (isCol ? sheet.getCellExtend(i, j) : sheet.getCellExtend(j, i));
+							iValue = (isCol ? sheet.getCellExtend(i, j,_selected) : sheet.getCellExtend(j, i,_selected));
 							if (id == "key")
 							{
-								iValue = (isCol ? sheet.getCellExtend(i, index) : sheet.getCellExtend(index, i));
-								id = (isCol ? sheet.getCellExtend(i, j) : sheet.getCellExtend(j, i));
+								iValue = (isCol ? sheet.getCellExtend(i, index,_selected) : sheet.getCellExtend(index, i,_selected));
+								id = (isCol ? sheet.getCellExtend(i, j,_selected) : sheet.getCellExtend(j, i,_selected));
 								if (!id)
 								{
 									nodeStr = null;
@@ -221,7 +222,7 @@
 				var lang:String,id:String;
 				for(var i:int=1;i<=row;i+=1)
 				{	
-					id=(isRow ? sheet.getCellExtend(1, i) : sheet.getCellExtend(i, 1));	
+					id=(isRow ? sheet.getCellExtend(1, i,_selected) : sheet.getCellExtend(i, 1,_selected));	
 					if(id=="lang")
 					{
 						if(isRow)
@@ -254,9 +255,9 @@
 						oNode[id]=1;
 						if(nodeStr!="     <info ") nodeStr+="           ";
 						if(isRow)
-							nodeStr +=id+"=\"" + sheet.getCellExtend(index, j) + "\"";			
+							nodeStr +=id+"=\"" + sheet.getCellExtend(index, j,_selected) + "\"";			
 						else 
-							nodeStr +=id+"=\"" + sheet.getCellExtend(j, index) + "\"";	
+							nodeStr +=id+"=\"" + sheet.getCellExtend(j, index,_selected) + "\"";	
 						
 						nodeStr+="\n";
 					}
@@ -274,13 +275,13 @@
 			{
 				var isFind:Boolean;			
 				var id:String;      
-				var count:int=(isRow ? sheet.cols: sheet.rows);
+				var count:int=(!isRow ? sheet.cols: sheet.rows);
 				for(var j:int=1;j<=count;j+=1)
 				{			
 					if(isRow)
-						id= sheet.getCellExtend(1, j);		
+						id= sheet.getCellExtend(1, j,_selected);		
 					else 
-						id=sheet.getCellExtend(j,1);
+						id=sheet.getCellExtend(j,1,_selected);
 					
 					if(id==sname)
 					{
@@ -382,7 +383,9 @@
 					Alert.show("选择Excel文件");
 					return;
 				}
-				onCreate(excel_txt.text);
+				
+				_selected = select_mc.selected;
+				onCreate(excel_txt.text);				
 			}
 			protected function clear_mc_clickHandler(event:MouseEvent):void
 			{
@@ -425,7 +428,7 @@
 	<mx:Form x="-2" y="1" width="492" height="475">	
 		<s:BorderContainer width="456" height="30" borderVisible="true" dropShadowVisible="false" borderColor="#4C3939" borderAlpha="0.01">
 			<s:Label x="-1" y="-1" text="Excel导出XML工具" width="455" height="29" verticalAlign="middle" textAlign="center"/>
-			<s:Label x="355" y="-1" text="beta 4.1.1&#xd;03-22 2015" width="99" height="35" verticalAlign="middle" textAlign="right" paddingBottom="0" color="#8A7070"/>
+			<s:Label x="355" y="-1" text="beta 5.0.0&#xd;05-13 2015" width="99" height="35" verticalAlign="middle" textAlign="right" paddingBottom="0" color="#8A7070"/>
 		</s:BorderContainer>	
 		<s:BorderContainer width="456" height="399" dropShadowVisible="true" borderAlpha="0.34" borderWeight="0">		
 			<s:Button x="319" y="13" label="选择Excel路径" width="117" id="choose_btn" click="onBrowseProject(event)"/>
@@ -435,6 +438,7 @@
 			<s:Button x="276" y="83" label="开始生成" id="start_btn" click="start_btn_clickHandler(event)"/>
 			<s:TextArea y="112" width="431" height="275" id="tips_txt" paddingBottom="3" paddingTop="3" x="10"/>
 			<s:Button x="357" y="83" label="清理文本" id="clear_mc" click="clear_mc_clickHandler(event)"/>
+			<s:CheckBox  x="10" y="83" label="是否支持Html" id="select_mc" />
 		</s:BorderContainer>
 		
 	</mx:Form>
