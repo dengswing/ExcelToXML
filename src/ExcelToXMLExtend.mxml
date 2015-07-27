@@ -164,6 +164,7 @@
 					
 					if (aLangList.indexOf(lang) == -1) aLangList.push(lang); //汇总语言 
 					dObject[lang] = createXML(i);
+					
 				}
 				
 				function createXML(index:int):String
@@ -255,9 +256,9 @@
 						oNode[id]=1;
 						if(nodeStr!="     <info ") nodeStr+="           ";
 						if(isRow)
-							nodeStr +=id+"=\"" + sheet.getCellExtend(index, j,_selected) + "\"";			
+							nodeStr +=id+"=\"" + replace(sheet.getCellExtend(index, j,_selected)) + "\"";			
 						else 
-							nodeStr +=id+"=\"" + sheet.getCellExtend(j, index,_selected) + "\"";	
+							nodeStr +=id+"=\"" + replace(sheet.getCellExtend(j, index,_selected)) + "\"";	
 						
 						nodeStr+="\n";
 					}
@@ -266,6 +267,15 @@
 					sxml+=nodeStr;
 					if(!isHaveLang) lang="ALL";
 					return [lang,sxml];
+			}
+			
+			private function replace(content:String):String
+			{
+				if(content!=null)
+				{
+					content = content.replace(new RegExp(/\"/g), "'");
+				}
+				return content;
 			}
 			
 			/**
